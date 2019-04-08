@@ -35,6 +35,9 @@ import com.mewna.catnip.entity.Entity;
 import com.mewna.catnip.entity.guild.Guild;
 import com.mewna.catnip.entity.user.Presence;
 import com.mewna.catnip.extension.Extension;
+import com.mewna.catnip.rest.ratelimit.DefaultRateLimiter;
+import com.mewna.catnip.rest.requester.Requester;
+import com.mewna.catnip.rest.requester.SerialRequester;
 import com.mewna.catnip.shard.DiscordEvent.Raw;
 import com.mewna.catnip.shard.buffer.CachingBuffer;
 import com.mewna.catnip.shard.buffer.EventBuffer;
@@ -54,8 +57,10 @@ import io.vertx.core.json.JsonObject;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.beans.ConstructorProperties;
+import java.net.http.HttpClient;
 import java.util.EnumSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author amy
@@ -149,6 +154,8 @@ public final class CatnipOptions implements Cloneable {
      */
     @Nonnull
     private Set<String> disabledEvents = ImmutableSet.of();
+    @Nonnull
+    private Requester requester = new SerialRequester(new DefaultRateLimiter(), HttpClient.newBuilder());
     /**
      * Whether or not extensions overriding options should be logged. Defaults
      * to {@code true}.
@@ -175,7 +182,7 @@ public final class CatnipOptions implements Cloneable {
      * <p>
      * NOTE: Capturing stacktraces is <strong>s l o w</strong>. If you have
      * performance problems around REST requests, you can disable this, at the
-     * cost of losing debugability.
+     * cost of losing debuggability.
      * <p>
      * TODO: When we move off of Java 8, use the stack walking API for this
      */
@@ -192,6 +199,13 @@ public final class CatnipOptions implements Cloneable {
      * that the version mismatches won't be an issue.
      */
     private boolean warnOnEntityVersionMismatch = true;
+    /**
+     * How long catnip should wait to ensure that all member chunks have been
+     * received, in milliseconds. If all member chunks still haven't been
+     * received after this period, member chunking will be re-requested, to try
+     * to make sure we're not missing any.
+     */
+    private long memberChunkTimeout = TimeUnit.SECONDS.toMillis(10);
     
     @ConstructorProperties("token")
     public CatnipOptions(@Nonnull final String token) {

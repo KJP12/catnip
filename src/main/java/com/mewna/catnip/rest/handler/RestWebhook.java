@@ -175,20 +175,20 @@ public class RestWebhook extends RestHandler {
                                                          @Nullable final String username, @Nullable final String avatarUrl,
                                                          @Nonnull final MessageOptions options) {
         final JsonObject body = new JsonObject();
-        
+    
         if(options.content() != null && !options.content().isEmpty()) {
             body.put("content", options.content());
         }
-        
+    
         if(options.embed() != null) {
-            body.put("embed", entityBuilder().embedToJson(options.embed()));
+            body.put("embeds", new JsonArray().add(entityBuilder().embedToJson(options.embed())));
         }
-        
-        if(body.getValue("embed", null) == null && body.getValue("content", null) == null
+    
+        if(body.getValue("embeds", null) == null && body.getValue("content", null) == null
                 && !options.hasFiles()) {
             throw new IllegalArgumentException("Can't build a message with no content, no embeds and no files!");
         }
-        
+    
         if(username != null && !username.isEmpty()) {
             body.put("username", username);
         }

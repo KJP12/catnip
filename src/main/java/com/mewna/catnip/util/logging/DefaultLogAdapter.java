@@ -46,7 +46,6 @@ public class DefaultLogAdapter implements LogAdapter {
     
     @Override
     public void log(@Nonnull final Level level, @Nonnull final String message, @Nullable final Object... objects) {
-        // TODO: Switch this to use StackWalker when eventually moving to J9+
         final Class<?> caller = stackWalker.getCallerClass();
         final Logger logger = LoggerFactory.getLogger(caller);
         final FormattingTuple tuple = MessageFormatter.arrayFormat(message, objects);
